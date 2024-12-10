@@ -1,0 +1,169 @@
+---
+title: "Runoff_Calcs"
+author: "Hannah Curtis"
+date: "2024-05-02"
+output: html_document
+---
+
+```{r}
+library(raster)
+```
+
+Read in inflow data
+```{r}
+# Read in inflow data from all of the pond files within the water level file (path: /Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level)
+baxter <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Baxter/Baxter_Inflow_Outflow_all.csv")
+commave <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/CommAve/CommAve_Inflow_Outflow_all.csv")
+doba4 <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Doba4/Doba4_Inflow_Outflow_all.csv")
+doba5 <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Doba5/Doba5_Inflow_Outflow_all.csv")
+doba7 <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Doba7/Doba7_Inflow_Outflow_all.csv")
+doba8 <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Doba8/Doba8_Inflow_Outflow_all.csv")
+doba22 <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Doba22/Doba22_Inflow_Outflow_all.csv")
+doorcreek <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/DoorCreek/DoorCreek_Inflow_Outflow_all.csv")
+elver <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Elver/Elver_Inflow_Outflow_all.csv")
+garner <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Garner/Garner_Inflow_Outflow_all.csv")
+greentree <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/GreenTree/GreenTree_Inflow_Outflow_all.csv")
+hospital <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Hospital/Hospital_Inflow_Outflow_all.csv")
+hpchurch <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/HpChurch/HpChurch_Inflow_Outflow_all.csv")
+lot60 <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Lot60/Lot60_Inflow_Outflow_all.csv")
+madcity <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/MadCity/MadCity_Inflow_Outflow_all.csv")
+manitou <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Manitou/Manitou_Inflow_Outflow_all.csv")
+mariondunn <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/MarionDunn/MarionDunn_Inflow_Outflow_all.csv")
+midtown <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Midtown/Midtown_Inflow_Outflow_all.csv")
+owen <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Owen/Owen_Inflow_Outflow_all.csv")
+twofountains <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/TwoFountains/TwoFountains_Inflow_Outflow_all.csv")
+```
+
+Function to caculate volume of runoff
+```{r}
+# Function to find the index of 7/29/23 00:00:00 within the dataset
+# Then start at that date time and calculate the volume of the runoff from then until the peak inflow within the next 48 hours value by finding the area under the inflow curve
+# To find the volume of inflow, iterate through the range of inflow values where you take the sum of the current inflow value and the next inflow value and divide it by the time step (5 min). Then sum all of these values to get the volume of the runoff.
+
+calculate_runoff_volume <- function(data, start_time, timestep = 5) {
+  
+  # Find the index of the start datetime
+  start_index <- which(data$DateTime == start_time)
+  
+  # Calculate the end index (within the next 576 time steps)
+  end_index <- which.max(data$Inflow.cfs[start_index:(start_index + 576)])
+  
+  # Subset the dataframe to the specified range
+  df <- data[start_index:(end_index+start_index), ]
+  
+  # Initialize total volume
+  total_volume <- 0
+  
+  # Iterate through inflow values
+  for (i in 1:(nrow(df) - 2)) {
+    # Calculate runoff volume for each time step
+    runoff_volume <- (df$Inflow.cfs[i] + df$Inflow.cfs[i + 1]) / 2 * (timestep * 60)
+    
+    # Add to total volume
+    total_volume <- total_volume + runoff_volume
+  }
+  
+  return(total_volume)
+}
+
+```
+
+July 29 Storm
+```{r}
+hospital_ro_jul <- calculate_runoff_volume(hospital, "7/28/23 21:20", timestep = 5)
+lot60_ro_jul <- calculate_runoff_volume(lot60, "7/28/23 21:20", timestep = 5)
+garner_ro_jul <- calculate_runoff_volume(garner, "7/28/23 21:25", timestep = 5)
+doba7_ro_jul <- calculate_runoff_volume(doba7, "7/28/23 21:05", timestep = 5)
+owen_ro_jul <- calculate_runoff_volume(owen, "7/28/23 21:25", timestep = 5)
+hpchurch_ro_jul <- calculate_runoff_volume(hpchurch, "7/28/23 21:20", timestep = 5)
+doba8_ro_jul <- calculate_runoff_volume(doba8, "7/28/23 21:20", timestep = 5)
+elver_ro_jul <- calculate_runoff_volume(elver, "7/28/23 21:00", timestep = 5)
+twofountains_ro_jul <- calculate_runoff_volume(twofountains, "7/28/23 21:20", timestep = 5)
+greentree_ro_jul <- calculate_runoff_volume(greentree, "7/28/23 21:00", timestep = 5)
+mariondunn_ro_jul <- calculate_runoff_volume(mariondunn, "7/28/23 21:25", timestep = 5)
+manitou_ro_jul <- calculate_runoff_volume(manitou, "7/28/23 21:20", timestep = 5)
+madcity_ro_jul <- calculate_runoff_volume(madcity, "7/28/23 21:30", timestep = 5)
+baxter_ro_jul <- calculate_runoff_volume(baxter, "7/28/23 21:40", timestep = 5)
+doba22_ro_jul <- calculate_runoff_volume(doba22, "7/28/23 21:25", timestep = 5)
+doba4_ro_jul <- calculate_runoff_volume(doba4, "7/28/23 20:55", timestep = 5)
+doorcreek_ro_jul <- calculate_runoff_volume(doorcreek, "7/28/23 21:55", timestep = 5)
+commave_ro_jul <- calculate_runoff_volume(commave, "7/28/23 19:40", timestep = 5)
+```
+
+August 14 Storm
+```{r}
+hospital_ro_aug <- calculate_runoff_volume(hospital, "8/14/23 5:45", timestep = 5)
+lot60_ro_aug <- calculate_runoff_volume(lot60, "8/14/23 6:00", timestep = 5)
+garner_ro_aug <- calculate_runoff_volume(garner, "8/14/23 6:00", timestep = 5)
+doba7_ro_aug <- calculate_runoff_volume(doba7, "8/14/23 5:55", timestep = 5)
+owen_ro_aug <- calculate_runoff_volume(owen, "8/14/23 5:55", timestep = 5)
+hpchurch_ro_aug <- calculate_runoff_volume(hpchurch, "8/14/23 5:30", timestep = 5)
+doba8_ro_aug <- calculate_runoff_volume(doba8, "8/14/23 6:15", timestep = 5)
+midtown_ro_aug <- calculate_runoff_volume(midtown, "8/14/23 5:50", timestep = 5)
+elver_ro_aug <- calculate_runoff_volume(elver, "8/14/23 6:05", timestep = 5)
+twofountains_ro_aug <- calculate_runoff_volume(twofountains, "8/14/23 6:15", timestep = 5)
+greentree_ro_aug <- calculate_runoff_volume(greentree, "8/14/23 5:10", timestep = 5)
+mariondunn_ro_aug <- calculate_runoff_volume(mariondunn, "8/14/23 6:10", timestep = 5)
+manitou_ro_aug <- calculate_runoff_volume(manitou, "8/14/23 6:15", timestep = 5)
+madcity_ro_aug <- calculate_runoff_volume(madcity, "8/14/23 6:30", timestep = 5)
+baxter_ro_aug <- calculate_runoff_volume(baxter, "8/14/23 6:20", timestep = 5)
+doba22_ro_aug <- calculate_runoff_volume(doba22, "8/14/23 10:00", timestep = 5)
+doba5_ro_aug <- calculate_runoff_volume(doba5, "8/14/23 6:10", timestep = 5)
+doba4_ro_aug <- calculate_runoff_volume(doba4, "8/14/23 6:10", timestep = 5)
+doorcreek_ro_aug <- calculate_runoff_volume(doorcreek, "8/14/23 6:25", timestep = 5)
+commave_ro_aug <- calculate_runoff_volume(commave, "8/14/23 6:10", timestep = 5)
+```
+
+September 24 Storm
+```{r}
+hospital_ro_sep <- calculate_runoff_volume(hospital, "9/26/23 0:00", timestep = 5)
+lot60_ro_sep <- calculate_runoff_volume(lot60, "9/26/23 0:00", timestep = 5)
+garner_ro_sep <- calculate_runoff_volume(garner, "9/26/23 0:00", timestep = 5)
+doba7_ro_sep <- calculate_runoff_volume(doba7, "9/25/23 23:55", timestep = 5)
+owen_ro_sep <- calculate_runoff_volume(owen, "9/26/23 3:35", timestep = 5)
+hpchurch_ro_sep <- calculate_runoff_volume(hpchurch, "9/25/23 23:05", timestep = 5)
+doba8_ro_sep <- calculate_runoff_volume(doba8, "9/25/23 23:35", timestep = 5)
+midtown_ro_sep <- calculate_runoff_volume(midtown, "9/25/23 23:50", timestep = 5)
+elver_ro_sep <- calculate_runoff_volume(elver, "9/26/23 0:00", timestep = 5)
+twofountains_ro_sep <- calculate_runoff_volume(twofountains, "9/26/23 3:00", timestep = 5)
+greentree_ro_sep <- calculate_runoff_volume(greentree, "9/25/23 23:55", timestep = 5)
+mariondunn_ro_sep <- calculate_runoff_volume(mariondunn, "9/26/23 0:05", timestep = 5)
+manitou_ro_sep <- calculate_runoff_volume(manitou, "9/26/23 0:00", timestep = 5)
+madcity_ro_sep <- calculate_runoff_volume(madcity, "9/26/23 0:00", timestep = 5)
+baxter_ro_sep <- calculate_runoff_volume(baxter, "9/26/23 0:05", timestep = 5)
+doba22_ro_sep <- calculate_runoff_volume(doba22, "9/26/23 0:10", timestep = 5)
+doba5_ro_sep <- calculate_runoff_volume(doba5, "9/26/23 0:20", timestep = 5)
+doba4_ro_sep <- calculate_runoff_volume(doba4, "9/26/23 0:10", timestep = 5)
+doorcreek_ro_sep <- calculate_runoff_volume(doorcreek, "9/26/23 0:05", timestep = 5)
+commave_ro_sep <- calculate_runoff_volume(commave, "9/26/23 0:05", timestep = 5)
+```
+
+July 23 Storm
+```{r}
+hospital_ro_jul24 <- calculate_runoff_volume(hospital, "7/23/24 0:00", timestep = 5)
+lot60_ro_jul24 <- calculate_runoff_volume(lot60, "7/23/24 0:00", timestep = 5)
+garner_ro_jul24 <- calculate_runoff_volume(garner, "7/23/24 0:00", timestep = 5)
+doba7_ro_jul24 <- calculate_runoff_volume(doba7, "7/23/24 0:00", timestep = 5)
+owen_ro_jul24 <- calculate_runoff_volume(owen, "7/23/24 0:00", timestep = 5)
+doba8_ro_jul24 <- calculate_runoff_volume(doba8, "7/23/24 0:00", timestep = 5)
+midtown_ro_jul24 <- calculate_runoff_volume(midtown, "7/23/24 0:00", timestep = 5)
+elver_ro_jul24 <- calculate_runoff_volume(elver, "7/23/24 0:00", timestep = 5)
+greentree_ro_jul24 <- calculate_runoff_volume(greentree, "7/23/24 0:00", timestep = 5)
+mariondunn_ro_jul24 <- calculate_runoff_volume(mariondunn, "7/23/24 0:00", timestep = 5)
+manitou_ro_jul24 <- calculate_runoff_volume(manitou, "7/23/24 0:00", timestep = 5)
+doba22_ro_jul24 <- calculate_runoff_volume(doba22, "7/23/24 0:00", timestep = 5)
+doba5_ro_jul24 <- calculate_runoff_volume(doba5, "7/23/24 0:00", timestep = 5)
+doba4_ro_jul24 <- calculate_runoff_volume(doba4, "7/23/24 0:00", timestep = 5)
+doorcreek_ro_jul24 <- calculate_runoff_volume(doorcreek, "7/23/24 0:00", timestep = 5)
+commave_ro_jul24 <- calculate_runoff_volume(commave, "7/23/24 0:00", timestep = 5)
+```
+
+Save runoff volume as csv
+```{r}
+# save runoff volume as csv where the first column is the name of the pond and the second column is the runoff volume for all three storms
+runoff_volume <- data.frame("Pond" = c("Hospital", "Lot60", "Garner", "Doba7", "Owen", "HpChurch", "Doba8", "Midtown", "Elver", "TwoFountains", "GreenTree", "MarionDunn", "Manitou", "MadCity", "Baxter", "Doba22", "Doba5", "Doba4", "DoorCreek", "CommAve"), "July29" = c(hospital_ro_jul, lot60_ro_jul, garner_ro_jul, doba7_ro_jul, owen_ro_jul, hpchurch_ro_jul, doba8_ro_jul, 0, elver_ro_jul, twofountains_ro_jul, greentree_ro_jul, mariondunn_ro_jul, manitou_ro_jul, madcity_ro_jul, baxter_ro_jul, doba22_ro_jul, 0, doba4_ro_jul, doorcreek_ro_jul, commave_ro_jul), "August14" = c(hospital_ro_aug, lot60_ro_aug, garner_ro_aug, doba7_ro_aug, owen_ro_aug, hpchurch_ro_aug, doba8_ro_aug, midtown_ro_aug, elver_ro_aug, twofountains_ro_aug, greentree_ro_aug, mariondunn_ro_aug, manitou_ro_aug, madcity_ro_aug, baxter_ro_aug, doba22_ro_aug, doba5_ro_aug, doba4_ro_aug, doorcreek_ro_aug, commave_ro_aug), "September24" = c(hospital_ro_sep, lot60_ro_sep, garner_ro_sep, doba7_ro_sep, owen_ro_sep, hpchurch_ro_sep, doba8_ro_sep, midtown_ro_sep, elver_ro_sep, twofountains_ro_sep, greentree_ro_sep, mariondunn_ro_sep, manitou_ro_sep, madcity_ro_sep, baxter_ro_sep, doba22_ro_sep, doba5_ro_sep, doba4_ro_sep, doorcreek_ro_sep, commave_ro_sep),  "July23" = c(hospital_ro_jul24, lot60_ro_jul24, garner_ro_jul24, doba7_ro_jul24, owen_ro_jul24, 0, doba8_ro_jul24, midtown_ro_jul24, elver_ro_jul24, 0, greentree_ro_jul24, mariondunn_ro_jul24, manitou_ro_jul24, 0, 0, doba22_ro_jul24, doba5_ro_jul24, doba4_ro_jul24, doorcreek_ro_jul24, commave_ro_jul24))
+
+write.csv(runoff_volume, "/Users/hannahcurtis/Desktop/School/UWMadison/Research/Data Analysis/Predictor_Variables/Runoff_Calcs/runoff_volume_new.csv")
+
+```
+

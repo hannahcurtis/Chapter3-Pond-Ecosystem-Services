@@ -1,0 +1,160 @@
+---
+title: "Outflow_Days"
+author: "Hannah Curtis"
+date: "2024-04-11"
+output: html_document
+---
+
+This file calculates the percentage of days that outflow is occurring in each pond. The calculation uses the outflow calculations using weir/orifice equations and considers outflow to be greater than 1 cfs. 
+
+Updated: 4/11/24
+
+Read outflow files:
+```{r}
+# Baxter
+baxter_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Baxter/Baxter_Inflow_Outflow_all.csv")
+# Commercial Ave
+commave_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/CommAve/CommAve_Inflow_Outflow_all.csv")
+# DobsonA4
+doba4_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/DobA4/DobA4_Inflow_Outflow_all.csv")
+# DobsonA5
+doba5_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/DobA5/DobA5_Inflow_Outflow_all.csv")
+# DobsonA7
+doba7_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/DobA7/DobA7_Inflow_Outflow_all.csv")
+# DobsonA8
+doba8_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/DobA8/DobA8_Inflow_Outflow_all.csv")
+# DobsonA22
+doba22_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/DobA22/DobA22_Inflow_Outflow_all.csv")
+# Door Creek
+doorcreek_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/DoorCreek/DoorCreek_Inflow_Outflow_all.csv")
+# Elver
+elver_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Elver/Elver_Inflow_Outflow_all.csv")
+# Garner
+garner_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Garner/Garner_Inflow_Outflow_all.csv")
+# Greentree
+greentree_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Greentree/Greentree_Inflow_Outflow_all.csv")
+# Hospital
+hospital_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Hospital/Hospital_Inflow_Outflow_all.csv")
+# HP Church
+hpchurch_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/HPChurch/HPChurch_Inflow_Outflow_all.csv")
+# Lot 60
+lot60_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Lot60/Lot60_Inflow_Outflow_all.csv")
+# Mad City
+madcity_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/MadCity/MadCity_Inflow_Outflow_all.csv")
+# Manitou
+manitou_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Manitou/Manitou_Inflow_Outflow_all.csv")
+# Marion Dunn
+mariondunn_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/MarionDunn/MarionDunn_Inflow_Outflow_all.csv")
+# Midtown
+midtown_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Midtown/Midtown_Inflow_Outlfow.csv")
+# Owen
+owen_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/Owen/Owen_Inflow_Outflow_all.csv")
+# Two Fountains
+twofountains_of_data <- read.csv("/Users/hannahcurtis/Desktop/School/UWMadison/Research/Water_Level/TwoFountains/TwoFountains_Inflow_Outflow_all.csv")
+```
+
+Peak Outflow
+```{r}
+max(hospital_of_data$Outflow.cfs)
+max(lot60_of_data$Outflow.cfs)
+max(garner_of_data$Outflow.cfs)
+max(doba7_of_data$Outflow.cfs)
+max(owen_of_data$Outflow.cfs)
+max(hpchurch_of_data$Outflow.cfs)
+max(doba8_of_data$Outflow.cfs)
+max(midtown_of_data$Outflow.cfs)
+max(elver_of_data$Outflow.cfs)
+max(twofountains_of_data$Outflow.cfs)
+max(greentree_of_data$Outflow.cfs)
+max(mariondunn_of_data$Outflow.cfs)
+max(manitou_of_data$Outflow.cfs)
+max(madcity_of_data$Outflow.cfs)
+max(baxter_of_data$Outflow.cfs)
+max(doba22_of_data$Outflow.cfs)
+max(doba5_of_data$Outflow.cfs)
+max(doba4_of_data$Outflow.cfs)
+max(doorcreek_of_data$Outflow.cfs)
+max(commave_of_data$Outflow.cfs)
+
+```
+
+Outflow function
+```{r}
+
+get_outflow <- function(outflow_data) {
+  # Convert the DateTime column to Date format
+  outflow_data$Date <- as.Date(outflow_data$DateTime, format = "%m/%d/%y %H:%M")
+  # Extract just the date portion
+  outflow_data$Date <- format(outflow_data$Date, "%m/%d/%y")
+  # Filter dates based on the threshold of outflow
+  filtered_dates <- outflow_data$Date[outflow_data$Outflow.cfs > 1]
+  # Use length to get the number of different values
+  unique_dates <- length(unique(filtered_dates))
+  # Get percentage of days with outflow
+  percentage_outflow <- (unique_dates/(length(unique(outflow_data$Date))))*100
+  # Return percentage of days with outflow
+  return(percentage_outflow)
+}
+
+```
+
+Pond percentage of days with outflow
+```{r}
+# Baxter
+baxter_outflow <- get_outflow(baxter_of_data)
+# Commercial Ave
+commave_outflow <- get_outflow(commave_of_data)
+# DobsonA4
+doba4_outflow <- get_outflow(doba4_of_data)
+# DobsonA5
+doba5_outflow <- get_outflow(doba5_of_data)
+# DobsonA7
+doba7_outflow <- get_outflow(doba7_of_data)
+# DobsonA8
+doba8_outflow <- get_outflow(doba8_of_data)
+# DobsonA22
+doba22_outflow <- get_outflow(doba22_of_data)
+# Door Creek
+doorcreek_outflow <- get_outflow(doorcreek_of_data)
+# Elver
+elver_outflow <- get_outflow(elver_of_data)
+# Garner
+garner_outflow <- get_outflow(garner_of_data)
+# Greentree
+greentree_outflow <- get_outflow(greentree_of_data)
+# Hospital
+hospital_outflow <- get_outflow(hospital_of_data)
+# HP Church
+hpchurch_outflow <- get_outflow(hpchurch_of_data)
+# Lot 60
+lot60_outflow <- get_outflow(lot60_of_data)
+# Mad City
+madcity_outflow <- get_outflow(madcity_of_data)
+# Manitou
+manitou_outflow <- get_outflow(manitou_of_data)
+# Marion Dunn
+mariondunn_outflow <- get_outflow(mariondunn_of_data)
+# Midtown
+midtown_outflow <- get_outflow(midtown_of_data)
+# Owen
+owen_outflow <- get_outflow(owen_of_data)
+# Two Fountains
+twofountains_outflow <- get_outflow(twofountains_of_data)
+```
+
+Save as csv file
+```{r}
+
+# Pond names
+pond_names <- c("Hospital", "Lot60", "Garner", "DobA7", "Owen", "HPChurch", "DobA8", "Midtown", "Elver", "TwoFountains", "Greentree", "MarionDunn", "Manitou", "MadCity", "Baxter", "DobA22", "DobA5", "DobA4", "DoorCreek", "CommAve")
+
+# Outflow percentage values
+outflow_percentage <- c(hospital_outflow, lot60_outflow, garner_outflow, doba7_outflow, owen_outflow, hpchurch_outflow, doba8_outflow, midtown_outflow, elver_outflow, twofountains_outflow, greentree_outflow, mariondunn_outflow, manitou_outflow, madcity_outflow, baxter_outflow, doba22_outflow, doba5_outflow, doba4_outflow, doorcreek_outflow, commave_outflow)
+
+# Create outflow percentage data frame for all ponds
+outflow_percentage_df <- data.frame(Pond.Name = pond_names, Percent.Days.Outflow = outflow_percentage)
+
+# Write csv for outflow percentage in each pond
+write.csv(outflow_percentage_df, "/Users/hannahcurtis/Desktop/School/UWMadison/Research/Data Analysis/Response_Variables/Flow_Regimes/Outflow_Percentage_Days_New.csv", row.names=FALSE)
+```
+
