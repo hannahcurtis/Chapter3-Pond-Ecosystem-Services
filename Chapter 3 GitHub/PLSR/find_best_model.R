@@ -22,7 +22,6 @@ compute_vi <- function(pls_model, ncomp=3) {
 }
 
 compute_aic <- function(model, ncomp) {
-  # this is uhhh kinda not statistically valid, but I don't know how much that will matter
   # https://www.mdpi.com/2076-3417/12/15/7850
   # n <- dim(model$residuals)[1]
   # return(n * log(sum(model$residuals[,,ncomp]^2)/n) + 2 * ncomp)
